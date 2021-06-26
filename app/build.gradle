@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'com.google.android.gms.oss-licenses-plugin'
 }
 
 android {
@@ -46,7 +47,8 @@ dependencies {
     implementation 'com.google.android.gms:play-services-places:17.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'com.github.matsudamper:ViewBindingUtil:0.1'
-    implementation 'androidx.collection:collection:1.1.0'
+    implementation 'androidx.collection:collection-ktx:1.1.0'
+    implementation 'com.google.android.gms:play-services-oss-licenses:17.0.0'
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
