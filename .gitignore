@@ -199,4 +199,4 @@ lint/tmp/
 # Android Profiling
 *.hprof
 
-
+**/google_maps_api.xml
