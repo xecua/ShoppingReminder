@@ -1,12 +1,11 @@
 package dev.koffein.shoppingreminder
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dev.koffein.shoppingreminder.databinding.ActivityMainBinding
@@ -23,7 +22,10 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         super.onCreate(savedInstanceState)
         viewModel.items.observe(this, {
             val adapter = ItemListAdapter(it)
-            binding.itemList.layoutManager = LinearLayoutManager(this)
+            val layoutManager = LinearLayoutManager(this)
+            val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
+            binding.itemList.addItemDecoration(itemDecoration)
+            binding.itemList.layoutManager = layoutManager
             binding.itemList.adapter = adapter
             adapter.notifyDataSetChanged()
         })
@@ -35,9 +37,10 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
 class ItemListAdapter(private val items: Array<Item>) :
     RecyclerView.Adapter<ItemListAdapter.ItemListViewHolder>() {
-    class ItemListViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val textView: TextView = view.findViewById(R.id.item_list_row_name)
 
+    class ItemListViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val nameView: TextView = view.findViewById(R.id.item_list_row_name)
+        val descView: TextView = view.findViewById(R.id.item_list_row_desc)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemListViewHolder {
@@ -48,7 +51,8 @@ class ItemListAdapter(private val items: Array<Item>) :
 
     // update
     override fun onBindViewHolder(holder: ItemListViewHolder, position: Int) {
-        holder.textView.text = items.getOrNull(position)?.name ?: "foo"
+        holder.nameView.text = items.getOrNull(position)?.name ?: ""
+        holder.descView.text = items.getOrNull(position)?.description ?: ""
     }
 
     override fun getItemCount(): Int {
