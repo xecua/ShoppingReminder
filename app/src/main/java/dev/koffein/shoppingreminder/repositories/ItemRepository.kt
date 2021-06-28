@@ -1,19 +1,30 @@
 package dev.koffein.shoppingreminder.repositories
 
 import dev.koffein.shoppingreminder.models.Item
+import kotlin.random.Random
 
 interface ItemRepository {
     suspend fun getItem(id: String): Item
     suspend fun getItems(): Array<Item>
 }
 
-class MockRepository: ItemRepository {
+class MockRepository : ItemRepository {
     override suspend fun getItem(id: String): Item = Item("dummy item", "dummy description")
 
-    override suspend fun getItems(): Array<Item> = arrayOf(
-        Item("dummy item1", "dummy description1"),
-        Item("dummy item2", "dummy description2")
-    )
+    override suspend fun getItems(): Array<Item> {
+        var s = 0
+        while (s % 30 == 0) {
+            s = Random.nextInt()
+        }
+        val size = s % 30
+
+        return (0..size).map { Item("dummy item$it", "dummy description$it") }
+            .toTypedArray()
+    }
+
+    companion object {
+        const val TAG = "MockRepository"
+    }
 
 }
 

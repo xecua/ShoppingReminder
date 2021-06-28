@@ -1,5 +1,6 @@
 package dev.koffein.shoppingreminder
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.TextView
@@ -8,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import dev.koffein.shoppingreminder.databinding.ActivityMainBinding
 import dev.koffein.shoppingreminder.models.Item
 import dev.koffein.shoppingreminder.viewmodels.MainActivityViewModel
@@ -29,8 +31,21 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             binding.itemList.adapter = adapter
             adapter.notifyDataSetChanged()
         })
-        // for checking
-        // startActivity(Intent(this, OssLicensesMenuActivity::class.java))
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId) {
+            R.id.menu_oss_license -> {
+               startActivity(Intent(this, OssLicensesMenuActivity::class.java))
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
 }
