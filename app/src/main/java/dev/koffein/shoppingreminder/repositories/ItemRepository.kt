@@ -12,11 +12,7 @@ class MockRepository : ItemRepository {
     override suspend fun getItem(id: String): Item = Item("dummy item", "dummy description")
 
     override suspend fun getItems(): Array<Item> {
-        var s = 0
-        while (s % 30 == 0) {
-            s = Random.nextInt()
-        }
-        val size = s % 30
+        val size = Random.nextInt(1, 30)
 
         return (0..size).map { Item("dummy item$it", "dummy description$it") }
             .toTypedArray()
