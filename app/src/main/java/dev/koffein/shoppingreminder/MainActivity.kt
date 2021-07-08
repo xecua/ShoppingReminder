@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageButton
@@ -14,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import dev.koffein.shoppingreminder.databinding.ActivityMainBinding
 import dev.koffein.shoppingreminder.databinding.ItemListRowBinding
+import dev.koffein.shoppingreminder.fragments.ItemEditDialog
 import dev.koffein.shoppingreminder.models.Item
 import dev.koffein.shoppingreminder.viewmodels.MainActivityViewModel
 import net.matsudamper.viewbindingutil.bindViewBinding
@@ -30,11 +30,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             val adapter = ItemListAdapter(it)
             adapter.setOnClickListener { index ->
                 View.OnClickListener {
-                    Toast.makeText(
-                        ctx,
-                        "$index: ${viewModel.items.value?.get(index)}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    ItemEditDialog.newInstance(index)
+                        .show(supportFragmentManager, ItemEditDialog::class.simpleName)
                 }
             }
 

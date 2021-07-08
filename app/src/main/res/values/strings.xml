@@ -3,4 +3,6 @@
     <string name="title_activity_maps">Map</string>
     <string name="open_source_license">Open Source License</string>
     <string name="configuration">Configuration</string>
+    <string name="item_name">項目名</string>
+    <string name="item_desc">説明</string>
 </resources>
