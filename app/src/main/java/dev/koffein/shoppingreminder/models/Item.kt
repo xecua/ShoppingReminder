@@ -1,6 +1,7 @@
 package dev.koffein.shoppingreminder.models
 
-import com.google.android.gms.location.places.Place
+import com.google.android.libraries.places.api.model.Place
+
 
 data class Item(
     val name: String = "",
