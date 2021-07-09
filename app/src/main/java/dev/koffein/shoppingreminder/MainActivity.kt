@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
 }
 
-class ItemListAdapter(private val items: Array<Item>) :
+class ItemListAdapter(private val items: List<Item>) :
     RecyclerView.Adapter<ItemListAdapter.ItemListViewHolder>() {
     private lateinit var listener: (Int) -> View.OnClickListener
 
