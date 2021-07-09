@@ -72,15 +72,13 @@ class ItemEditDialog : BottomSheetDialogFragment() {
 
 
         binding.editItemSend.setOnClickListener {
-            if (index != null) {
-                viewModel.setItem(
-                    Item(
-                        binding.editItemName.text.toString(),
-                        binding.editItemDesc.text.toString()
-                    ), index!!
-                )
-            }
-            // null: 新規追加
+            // index == null: 新規追加?
+            viewModel.setItem(
+                Item(
+                    binding.editItemName.text.toString(),
+                    binding.editItemDesc.text.toString()
+                ), index
+            )
             parentFragmentManager.beginTransaction().remove(this).commit()
         }
 

@@ -42,6 +42,11 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             binding.itemList.adapter = adapter
             adapter.notifyDataSetChanged()
         })
+
+        binding.addNewItem.setOnClickListener {
+            ItemEditDialog.newInstance()
+                .show(supportFragmentManager, ItemEditDialog::class.simpleName)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
