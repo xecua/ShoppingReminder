@@ -5,4 +5,6 @@
     <string name="configuration">Configuration</string>
     <string name="item_name">項目名</string>
     <string name="item_desc">説明</string>
+    <string name="save_inputs">Save inputs</string>
+    <string name="place_to_buy_this_item">買う場所</string>
 </resources>
