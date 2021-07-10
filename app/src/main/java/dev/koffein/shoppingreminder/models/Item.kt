@@ -1,10 +1,11 @@
 package dev.koffein.shoppingreminder.models
 
-import com.google.android.libraries.places.api.model.Place
+import java.util.*
 
 
 data class Item(
     val name: String = "",
     val description: String = "",
-    val place: Place? = null
+    val place: String = "", // 名前だけでええか?
+    val id: String = UUID.randomUUID().toString()
 )

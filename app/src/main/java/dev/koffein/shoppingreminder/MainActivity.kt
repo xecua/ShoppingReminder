@@ -88,8 +88,10 @@ class ItemListAdapter(private val items: List<Item>) :
 
     // update
     override fun onBindViewHolder(holder: ItemListViewHolder, position: Int) {
-        holder.nameView.text = items.getOrNull(position)?.name ?: ""
-        holder.descView.text = items.getOrNull(position)?.description ?: ""
+        items.getOrNull(position)?.let {
+            holder.nameView.text = it.name
+            holder.descView.text = it.description
+        }
         holder.editView.setOnClickListener(listener(position))
     }
 

@@ -22,13 +22,20 @@ class ItemEditDialog : BottomSheetDialogFragment() {
 
     private val viewModel by activityViewModels<MainActivityViewModel>()
 
-    private var index: Int? = null
+    // null == 新規作成
+    private var item: Item? = null
+
+    private var currentPlace: Place? = null
 
     override fun getTheme(): Int = R.style.CustomBottomSheetDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        index = arguments?.getInt(ARGS_INDEX)
+        // むしろitemを取得する?
+        val index = arguments?.getInt(ARGS_INDEX, -1)
+        if (index != null && index != -1) {
+            item = viewModel.items.value?.get(index)
+        }
 
         if (!Places.isInitialized()) {
             Places.initialize(requireContext(), resources.getString(R.string.google_maps_key))
@@ -44,22 +51,22 @@ class ItemEditDialog : BottomSheetDialogFragment() {
         val inflater = LayoutInflater.from(requireContext())
         binding = DialogEdititemBinding.inflate(inflater)
 
-        if (index != null) {
+        item?.let {
             // edit
-            viewModel.items.value?.get(index!!)?.let {
-                binding.editItemName.setText(it.name)
-                binding.editItemDesc.setText(it.description)
-            }
+            binding.editItemName.setText(it.name)
+            binding.editItemDesc.setText(it.description)
         }
 
         Log.d(TAG, "${parentFragmentManager.fragments}")
 
         (parentFragmentManager.findFragmentById(R.id.edit_item_place) as? AutocompleteSupportFragment)
             ?.apply {
-                setPlaceFields(listOf(Place.Field.ID, Place.Field.NAME))
+                setText(item?.place)
+                setPlaceFields(listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG))
                 setCountry("JP")
                 setOnPlaceSelectedListener(object : PlaceSelectionListener {
                     override fun onPlaceSelected(p0: Place) {
+                        currentPlace = p0
                         Log.i(TAG, "$p0")
                     }
 
@@ -73,12 +80,24 @@ class ItemEditDialog : BottomSheetDialogFragment() {
 
         binding.editItemSend.setOnClickListener {
             // index == null: 新規追加?
-            viewModel.setItem(
-                Item(
-                    binding.editItemName.text.toString(),
-                    binding.editItemDesc.text.toString()
-                ), index
-            )
+            if (item != null) {
+                viewModel.setItem(
+                    item!!.id,
+                    item!!.copy(
+                        name = binding.editItemName.text.toString(),
+                        description = binding.editItemDesc.text.toString(),
+                        place = currentPlace?.name ?: "",
+                    )
+                )
+            } else {
+                viewModel.addItem(
+                    Item(
+                        name = binding.editItemName.text.toString(),
+                        description = binding.editItemDesc.text.toString(),
+                        place = currentPlace?.name ?: "",
+                    )
+                )
+            }
             parentFragmentManager.beginTransaction().remove(this).commit()
         }
 

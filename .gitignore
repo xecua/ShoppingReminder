@@ -200,3 +200,4 @@ lint/tmp/
 *.hprof
 
 **/google_maps_api.xml
+app/google-services.json
