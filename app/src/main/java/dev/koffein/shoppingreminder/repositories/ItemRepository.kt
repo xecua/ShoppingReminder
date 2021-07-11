@@ -16,6 +16,8 @@ interface ItemRepository {
     // わける必要があるかは怪しい(itemがidを内包しているため)
     suspend fun setItem(id: String, item: Item)
     suspend fun addItem(item: Item)
+
+    suspend fun delItem(id: String)
 }
 
 class MockRepository : ItemRepository {
@@ -40,10 +42,14 @@ class MockRepository : ItemRepository {
         data[item.id] = item
     }
 
+    override suspend fun delItem(id: String) {
+        Log.d(TAG, "$id will be deleted")
+        data.remove(id)
+    }
+
     companion object {
         const val TAG = "MockRepository"
     }
-
 }
 
 class FirestoreRepository : ItemRepository {
@@ -117,7 +123,6 @@ class FirestoreRepository : ItemRepository {
 
     override suspend fun addItem(item: Item) {
         Log.d(TAG, "addItem")
-        setItem(item.id, item)
         val data = hashMapOf<String, Any>(
             "name" to item.name,
             "description" to item.description,
@@ -127,6 +132,12 @@ class FirestoreRepository : ItemRepository {
         firestore.collection(ROOT_COLLECTION_ID).document(documentId).collection(
             COLLECTION_ID
         ).document(item.id).set(data)
+    }
+
+    override suspend fun delItem(id: String) {
+        Log.d(TAG, "delItem")
+        firestore.collection(ROOT_COLLECTION_ID).document(documentId).collection(COLLECTION_ID)
+            .document(id).delete()
     }
 
     companion object {

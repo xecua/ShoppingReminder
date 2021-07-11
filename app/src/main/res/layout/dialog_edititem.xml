@@ -39,6 +39,18 @@
         app:layout_constraintTop_toBottomOf="@id/edit_item_desc" />
 
     <!-- 妥協(右上に持ってきたい……) -->
+    <Button
+        android:id="@+id/edit_item_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginBottom="10dp"
+        android:backgroundTint="#F44336"
+        android:text="@string/delete"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/edit_item_desc" />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/edit_item_send"
         android:layout_width="wrap_content"

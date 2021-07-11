@@ -65,71 +65,78 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 .show(supportFragmentManager, ItemEditDialog::class.simpleName)
         }
 
-        supportFragmentManager.setFragmentResultListener(
-            ItemEditDialog.RESULT_KEY,
-            this
-        ) { _, bundle ->
-            val name = bundle.getString("name")
-            val description = bundle.getString("description")
-            val place = bundle.get("place") as? Place
-            val id = bundle.getString("id")
-            val isNew = bundle.getBoolean("isNew")
+        supportFragmentManager.apply {
+            setFragmentResultListener(ItemEditDialog.DELETE_KEY, this@MainActivity) { _, bundle ->
+                val id = bundle.getString("id")!!
+                viewModel.delItem(id)
+                geofenceClient.removeGeofences(listOf(id))
+            }
+            setFragmentResultListener(
+                ItemEditDialog.RESULT_KEY,
+                this@MainActivity
+            ) { _, bundle ->
+                val name = bundle.getString("name")
+                val description = bundle.getString("description")
+                val place = bundle.get("place") as? Place
+                val id = bundle.getString("id")
+                val isNew = bundle.getBoolean("isNew")
 
-            val newItem = Item.ofNullable(name, description, place?.name, id)
+                val newItem = Item.ofNullable(name, description, place?.name, id)
 
-            if (place != null) {
-                // 通知を設定
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    if (ActivityCompat.checkSelfPermission(
-                            this,
-                            Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                        ) != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                            if (!isGranted) {
-                                Snackbar.make(
-                                    binding.root,
-                                    "リマインダ機能を利用するためには、位置情報を有効にする必要があります",
-                                    Snackbar.LENGTH_SHORT
-                                ).show()
-                            }
-                        }.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                if (place != null) {
+                    // 通知を設定
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        if (ActivityCompat.checkSelfPermission(
+                                this@MainActivity,
+                                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                                if (!isGranted) {
+                                    Snackbar.make(
+                                        binding.root,
+                                        "リマインダ機能を利用するためには、位置情報を有効にする必要があります",
+                                        Snackbar.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                        }
+                    }
+
+                    val geofence = Geofence.Builder()
+                        .setRequestId(newItem.id)
+                        .setCircularRegion(
+                            place.latLng!!.latitude,
+                            place.latLng!!.longitude,
+                            GEOFENCE_RADIUS
+                        )
+                        .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                        .setLoiteringDelay(GEOFENCE_LOITERING_DELAY)
+                        .build()
+                    val request = GeofencingRequest.Builder()
+                        .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL)
+                        .addGeofence(geofence)
+                        .build()
+                    val intent = Intent(this@MainActivity, GeofenceBroadcastReceiver::class.java)
+                    intent.putExtra("name", newItem.name)
+                    intent.putExtra("description", newItem.description)
+                    intent.putExtra("id", newItem.id)
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        this@MainActivity,
+                        0,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                    )
+                    geofenceClient.addGeofences(request, pendingIntent)?.run {
+                        addOnSuccessListener { Log.d(TAG, "Successfully add geofence $request") }
+                        addOnFailureListener { Log.e(TAG, "Failed to add geofence $request", it) }
                     }
                 }
-
-                val geofence = Geofence.Builder()
-                    .setRequestId(newItem.id)
-                    .setCircularRegion(
-                        place.latLng!!.latitude,
-                        place.latLng!!.longitude,
-                        100.0F // 適当
-                    )
-                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
-                    .setLoiteringDelay(1000 * 10)
-                    .build()
-                val request = GeofencingRequest.Builder()
-                    .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL)
-                    .addGeofence(geofence)
-                    .build()
-                val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
-                intent.putExtra("name", name)
-                intent.putExtra("description", description)
-                val pendingIntent = PendingIntent.getBroadcast(
-                    this,
-                    GeofenceBroadcastReceiver.INTENT_REQUEST_CODE,
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT
-                )
-                geofenceClient.addGeofences(request, pendingIntent)?.run {
-                    addOnSuccessListener { Log.d(TAG, "Successfully add geofence $request") }
-                    addOnFailureListener { Log.e(TAG, "Failed to add geofence $request", it) }
-                }
+                if (isNew) viewModel.addItem(newItem)
+                else viewModel.setItem(newItem.id, newItem)
+                // index持ってるとnotifyItemChangedが飛ばせそう?
             }
-
-            if (isNew) viewModel.addItem(newItem)
-            else viewModel.setItem(newItem.id, newItem)
-            // index持ってるとnotifyItemChangedが飛ばせそう?
         }
 
         if (ActivityCompat.checkSelfPermission(
@@ -166,6 +173,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     companion object {
         const val TAG = "MainActivity"
+        const val GEOFENCE_RADIUS = 100.0F // 適当
+        const val GEOFENCE_LOITERING_DELAY = 1000 * 60 * 1 // 1分
     }
 
 }

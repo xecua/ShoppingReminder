@@ -4,12 +4,14 @@ import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import androidx.core.os.bundleOf
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResult
 import com.google.android.gms.common.api.Status
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.model.TypeFilter
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -65,6 +67,7 @@ class ItemEditDialog : BottomSheetDialogFragment() {
             ?.apply {
                 setText(item?.place)
                 setPlaceFields(listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG))
+                setTypeFilter(TypeFilter.GEOCODE)
                 setCountry("JP")
                 setOnPlaceSelectedListener(object : PlaceSelectionListener {
                     override fun onPlaceSelected(p0: Place) {
@@ -78,7 +81,14 @@ class ItemEditDialog : BottomSheetDialogFragment() {
                 })
             }
 
-
+        binding.editItemDelete.visibility = if (item == null) View.GONE else View.VISIBLE
+        binding.editItemDelete.setOnClickListener {
+            val bundle = bundleOf(
+                "id" to item?.id
+            )
+            setFragmentResult(DELETE_KEY, bundle)
+            parentFragmentManager.beginTransaction().remove(this).commit()
+        }
 
         binding.editItemSend.setOnClickListener {
             // placeが設定されてるitemをplaceを新たに設定せずに更新するとcurrentPlaceがnullになる問題(idも持っといてPlace Detailsを叩く?)
@@ -110,6 +120,7 @@ class ItemEditDialog : BottomSheetDialogFragment() {
     companion object {
         const val TAG = "ItemEditDialog"
 
+        const val DELETE_KEY = "ItemEditDialogDelete"
         const val RESULT_KEY = "ItemEditDialogResult"
 
         // 型安全にしたいなあ……

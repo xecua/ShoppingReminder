@@ -42,6 +42,13 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
+    fun delItem(id: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            itemRepository.delItem(id)
+            updateItems()
+        }
+    }
+
     // 自動的に毎回呼べると良い?
     private suspend fun updateItems() {
         // 効率悪そう……
