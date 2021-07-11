@@ -6,7 +6,9 @@ plugins {
     id 'kotlin-parcelize'
 }
 
+
 android {
+    apply from: 'signingConfigs.gradle', to: android
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
 
@@ -22,8 +24,10 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {

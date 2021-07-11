@@ -201,3 +201,4 @@ lint/tmp/
 
 **/google_maps_api.xml
 app/google-services.json
+app/signingConfigs.gradle
