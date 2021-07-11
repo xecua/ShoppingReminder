@@ -4,7 +4,9 @@ import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import androidx.core.os.bundleOf
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.setFragmentResult
 import com.google.android.gms.common.api.Status
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
@@ -79,25 +81,15 @@ class ItemEditDialog : BottomSheetDialogFragment() {
 
 
         binding.editItemSend.setOnClickListener {
-            // index == null: 新規追加?
-            if (item != null) {
-                viewModel.setItem(
-                    item!!.id,
-                    item!!.copy(
-                        name = binding.editItemName.text.toString(),
-                        description = binding.editItemDesc.text.toString(),
-                        place = currentPlace?.name ?: "",
-                    )
-                )
-            } else {
-                viewModel.addItem(
-                    Item(
-                        name = binding.editItemName.text.toString(),
-                        description = binding.editItemDesc.text.toString(),
-                        place = currentPlace?.name ?: "",
-                    )
-                )
-            }
+            // placeが設定されてるitemをplaceを新たに設定せずに更新するとcurrentPlaceがnullになる問題(idも持っといてPlace Detailsを叩く?)
+            val bundle = bundleOf(
+                "isNew" to (item == null),
+                "name" to binding.editItemName.text.toString(),
+                "description" to binding.editItemDesc.text.toString(),
+                "place" to currentPlace,
+                "id" to item?.id
+            )
+            setFragmentResult(RESULT_KEY, bundle)
             parentFragmentManager.beginTransaction().remove(this).commit()
         }
 
@@ -117,6 +109,8 @@ class ItemEditDialog : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "ItemEditDialog"
+
+        const val RESULT_KEY = "ItemEditDialogResult"
 
         // 型安全にしたいなあ……
         const val ARGS_INDEX = "index"

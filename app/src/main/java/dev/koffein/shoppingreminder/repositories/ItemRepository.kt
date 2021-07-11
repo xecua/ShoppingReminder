@@ -135,7 +135,3 @@ class FirestoreRepository : ItemRepository {
         const val COLLECTION_ID = "items"
     }
 }
-
-// class FirebaseItemRepository: ItemRepository {
-//
-// }

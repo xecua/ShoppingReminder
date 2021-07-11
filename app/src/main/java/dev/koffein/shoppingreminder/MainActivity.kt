@@ -1,16 +1,29 @@
 package dev.koffein.shoppingreminder
 
+import android.Manifest
+import android.app.PendingIntent
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageButton
+import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingClient
+import com.google.android.gms.location.GeofencingRequest
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.material.snackbar.Snackbar
 import dev.koffein.shoppingreminder.databinding.ActivityMainBinding
 import dev.koffein.shoppingreminder.databinding.ItemListRowBinding
 import dev.koffein.shoppingreminder.fragments.ItemEditDialog
@@ -23,9 +36,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private val viewModel by viewModels<MainActivityViewModel>()
 
+    private lateinit var geofenceClient: GeofencingClient
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val ctx = this
+
+        geofenceClient = LocationServices.getGeofencingClient(this)
+
         viewModel.items.observe(this, {
             val adapter = ItemListAdapter(it)
             adapter.setOnClickListener { index ->
@@ -47,6 +64,89 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             ItemEditDialog.newInstance()
                 .show(supportFragmentManager, ItemEditDialog::class.simpleName)
         }
+
+        supportFragmentManager.setFragmentResultListener(
+            ItemEditDialog.RESULT_KEY,
+            this
+        ) { _, bundle ->
+            val name = bundle.getString("name")
+            val description = bundle.getString("description")
+            val place = bundle.get("place") as? Place
+            val id = bundle.getString("id")
+            val isNew = bundle.getBoolean("isNew")
+
+            val newItem = Item.ofNullable(name, description, place?.name, id)
+
+            if (place != null) {
+                // 通知を設定
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    if (ActivityCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                            if (!isGranted) {
+                                Snackbar.make(
+                                    binding.root,
+                                    "リマインダ機能を利用するためには、位置情報を有効にする必要があります",
+                                    Snackbar.LENGTH_SHORT
+                                ).show()
+                            }
+                        }.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    }
+                }
+
+                val geofence = Geofence.Builder()
+                    .setRequestId(newItem.id)
+                    .setCircularRegion(
+                        place.latLng!!.latitude,
+                        place.latLng!!.longitude,
+                        100.0F // 適当
+                    )
+                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                    .setLoiteringDelay(1000 * 10)
+                    .build()
+                val request = GeofencingRequest.Builder()
+                    .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL)
+                    .addGeofence(geofence)
+                    .build()
+                val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
+                intent.putExtra("name", name)
+                intent.putExtra("description", description)
+                val pendingIntent = PendingIntent.getBroadcast(
+                    this,
+                    GeofenceBroadcastReceiver.INTENT_REQUEST_CODE,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                geofenceClient.addGeofences(request, pendingIntent)?.run {
+                    addOnSuccessListener { Log.d(TAG, "Successfully add geofence $request") }
+                    addOnFailureListener { Log.e(TAG, "Failed to add geofence $request", it) }
+                }
+            }
+
+            if (isNew) viewModel.addItem(newItem)
+            else viewModel.setItem(newItem.id, newItem)
+            // index持ってるとnotifyItemChangedが飛ばせそう?
+        }
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                if (!isGranted) {
+                    Snackbar.make(
+                        binding.root,
+                        "リマインダ機能を利用するためには、位置情報を有効にする必要があります",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                }
+            }.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -62,6 +162,10 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    companion object {
+        const val TAG = "MainActivity"
     }
 
 }
