@@ -1,5 +1,6 @@
 package dev.koffein.shoppingreminder.repositories
 
+import android.os.Build
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -59,7 +60,7 @@ class FirestoreRepository : ItemRepository {
     private val documentId = "aaaaa"
 
     init {
-        if (BuildConfig.BUILD_TYPE == "debug") {
+        if (BuildConfig.BUILD_TYPE == "debug" && Build.MODEL.contains("Emulator")) {
             // 10.0.0.2: host machine address visible from emulator
             firestore.useEmulator("10.0.2.2", 8080)
             val settings = FirebaseFirestoreSettings.Builder().setPersistenceEnabled(false).build()

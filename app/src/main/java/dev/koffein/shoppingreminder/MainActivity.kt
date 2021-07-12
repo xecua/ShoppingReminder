@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                         )
                         .setExpirationDuration(Geofence.NEVER_EXPIRE)
                         .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
-                        .setLoiteringDelay(GEOFENCE_LOITERING_DELAY)
+                        .setLoiteringDelay(BuildConfig.GEOFENCE_LOITERING_DELAY)
                         .build()
                     val request = GeofencingRequest.Builder()
                         .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL)
@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     intent.putExtra("id", newItem.id)
                     val pendingIntent = PendingIntent.getBroadcast(
                         this@MainActivity,
-                        0,
+                        newItem.id.hashCode(),
                         intent,
                         PendingIntent.FLAG_UPDATE_CURRENT
                     )
@@ -174,7 +174,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     companion object {
         const val TAG = "MainActivity"
         const val GEOFENCE_RADIUS = 100.0F // 適当
-        const val GEOFENCE_LOITERING_DELAY = 1000 * 60 * 1 // 1分
     }
 
 }

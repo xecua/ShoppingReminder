@@ -67,7 +67,6 @@ class ItemEditDialog : BottomSheetDialogFragment() {
             ?.apply {
                 setText(item?.place)
                 setPlaceFields(listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG))
-                setTypeFilter(TypeFilter.GEOCODE)
                 setCountry("JP")
                 setOnPlaceSelectedListener(object : PlaceSelectionListener {
                     override fun onPlaceSelected(p0: Place) {

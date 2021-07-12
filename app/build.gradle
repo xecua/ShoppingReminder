@@ -28,6 +28,10 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
+            buildConfigField 'int', 'GEOFENCE_LOITERING_DELAY', '1000 * 60 * 1'
+        }
+        debug {
+            buildConfigField 'int', 'GEOFENCE_LOITERING_DELAY', '1000'
         }
     }
     compileOptions {
