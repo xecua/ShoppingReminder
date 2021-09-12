@@ -44,7 +44,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private val signInLauncher =
         registerForActivityResult(FirebaseAuthUIActivityResultContract(), { res ->
-            if (res.resultCode != RESULT_OK) {
+            if (res.resultCode == RESULT_OK) {
+                binding.addNewItem.visibility = View.VISIBLE
+            } else {
                 Log.d(TAG, res.idpResponse.toString())
                 // user did not sign in
                 Snackbar.make(
@@ -201,7 +203,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     signInLauncher.launch(createSignInIntent())
                     true
                 } else {
-                    AuthUI.getInstance().signOut(this)
+                    AuthUI.getInstance().signOut(this).addOnSuccessListener {
+                        binding.addNewItem.visibility = View.GONE
+                    }
                     true
                 }
             }
