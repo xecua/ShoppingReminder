@@ -17,6 +17,8 @@ import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
@@ -24,6 +26,8 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import dev.koffein.shoppingreminder.databinding.ActivityMainBinding
 import dev.koffein.shoppingreminder.databinding.ItemListRowBinding
 import dev.koffein.shoppingreminder.fragments.ItemEditDialog
@@ -38,10 +42,25 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private lateinit var geofenceClient: GeofencingClient
 
+    private val signInLauncher =
+        registerForActivityResult(FirebaseAuthUIActivityResultContract(), { res ->
+            if (res.resultCode != RESULT_OK) {
+                Log.d(TAG, res.idpResponse.toString())
+                // user did not sign in
+                Snackbar.make(
+                    binding.root,
+                    "このアプリを利用するにはサインインしてください",
+                    Snackbar.LENGTH_SHORT
+                ).show()
+            }
+        })
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         geofenceClient = LocationServices.getGeofencingClient(this)
+
+        signInLauncher.launch(createSignInIntent())
 
         viewModel.items.observe(this, {
             val adapter = ItemListAdapter(it)
@@ -161,21 +180,46 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         return true
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        val accountMenuItem = menu?.findItem(R.id.menu_account)
+        if (Firebase.auth.currentUser == null) {
+            accountMenuItem?.title = "Sign In"
+        } else {
+            accountMenuItem?.title = "Sign Out"
+        }
+        return super.onPrepareOptionsMenu(menu)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_oss_license -> {
                 startActivity(Intent(this, OssLicensesMenuActivity::class.java))
                 true
             }
+            R.id.menu_account -> {
+                if (item.title.equals("Sign In")) {
+                    signInLauncher.launch(createSignInIntent())
+                    true
+                } else {
+                    AuthUI.getInstance().signOut(this)
+                    true
+                }
+            }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    fun createSignInIntent(): Intent {
+        return AuthUI.getInstance().createSignInIntentBuilder()
+            .setAvailableProviders(arrayListOf(AuthUI.IdpConfig.GoogleBuilder().build()))
+            .setIsSmartLockEnabled(!BuildConfig.DEBUG, true)
+            .build()
     }
 
     companion object {
         const val TAG = "MainActivity"
         const val GEOFENCE_RADIUS = 100.0F // 適当
     }
-
 }
 
 class ItemListAdapter(private val items: List<Item>) :
