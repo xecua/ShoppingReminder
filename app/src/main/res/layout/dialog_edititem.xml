@@ -12,6 +12,7 @@
         android:hint="@string/item_name"
         android:importantForAutofill="no"
         android:inputType="text"
+        android:minHeight="48dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -24,6 +25,7 @@
         android:hint="@string/item_desc"
         android:importantForAutofill="no"
         android:inputType="text"
+        android:minHeight="48dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/edit_item_name" />
