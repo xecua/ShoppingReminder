@@ -2,9 +2,11 @@ package dev.koffein.shoppingreminder.repositories
 
 import android.os.Build
 import android.util.Log
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.ktx.Firebase
 import dev.koffein.shoppingreminder.BuildConfig
 import dev.koffein.shoppingreminder.models.Item
 import kotlinx.coroutines.tasks.await
@@ -56,8 +58,9 @@ class MockRepository : ItemRepository {
 class FirestoreRepository : ItemRepository {
     private val firestore = FirebaseFirestore.getInstance()
 
-    // とりあえず……
-    private val documentId = "aaaaa"
+    private fun getDocumentId(): String? {
+        return Firebase.auth.currentUser?.uid
+    }
 
     init {
         if (BuildConfig.BUILD_TYPE == "debug" && Build.MODEL.contains("Emulator")) {
@@ -71,12 +74,14 @@ class FirestoreRepository : ItemRepository {
     override suspend fun getItem(id: String): Item? {
         Log.d(TAG, "getItem: $id")
         val snapshot = try {
-            firestore.collection(ROOT_COLLECTION_ID).document(documentId).collection(COLLECTION_ID)
-                .document(id).get().await()
+            getDocumentId()?.let {
+                firestore.collection(ROOT_COLLECTION_ID).document(it).collection(COLLECTION_ID)
+                    .document(id).get().await()
+            }
         } catch (e: FirebaseFirestoreException) {
             Log.e(TAG, "Failed to get item $id", e)
             return null
-        }
+        } ?: return null
 
         Log.d(TAG, "$snapshot.data")
 
@@ -91,12 +96,15 @@ class FirestoreRepository : ItemRepository {
     override suspend fun getItems(): List<Item> {
         Log.d(TAG, "getItems")
         val snapshot = try {
-            firestore.collection(ROOT_COLLECTION_ID).document(documentId).collection(COLLECTION_ID)
-                .get().await()
+            getDocumentId()?.let {
+                firestore.collection(ROOT_COLLECTION_ID).document(it).collection(COLLECTION_ID)
+                    .get().await()
+            }
         } catch (e: FirebaseFirestoreException) {
             Log.e(TAG, "Failed to get items", e)
             return listOf()
-        }
+        } ?: return listOf()
+
         return snapshot.documents.map {
             Log.d(TAG, "$it")
             Item(
@@ -117,9 +125,11 @@ class FirestoreRepository : ItemRepository {
             "place" to item.place,
             "id" to item.id
         )
-        firestore.collection(ROOT_COLLECTION_ID).document(documentId).collection(
-            COLLECTION_ID
-        ).document(item.id).update(data)
+        getDocumentId()?.let {
+            firestore.collection(ROOT_COLLECTION_ID).document(it).collection(
+                COLLECTION_ID
+            ).document(item.id).update(data)
+        }
     }
 
     override suspend fun addItem(item: Item) {
@@ -130,15 +140,19 @@ class FirestoreRepository : ItemRepository {
             "place" to item.place,
             "id" to item.id
         )
-        firestore.collection(ROOT_COLLECTION_ID).document(documentId).collection(
-            COLLECTION_ID
-        ).document(item.id).set(data)
+        getDocumentId()?.let {
+            firestore.collection(ROOT_COLLECTION_ID).document(it).collection(
+                COLLECTION_ID
+            ).document(item.id).set(data)
+        }
     }
 
     override suspend fun delItem(id: String) {
         Log.d(TAG, "delItem")
-        firestore.collection(ROOT_COLLECTION_ID).document(documentId).collection(COLLECTION_ID)
-            .document(id).delete()
+        getDocumentId()?.let {
+            firestore.collection(ROOT_COLLECTION_ID).document(it).collection(COLLECTION_ID)
+                .document(id).delete()
+        }
     }
 
     companion object {
