@@ -1,4 +1,4 @@
-package dev.koffein.shoppingreminder.fragments
+package page.caffeine.shoppingreminder.fragments
 
 import android.app.Dialog
 import android.os.Bundle
@@ -15,10 +15,11 @@ import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import dev.koffein.shoppingreminder.R
-import dev.koffein.shoppingreminder.databinding.DialogEdititemBinding
-import dev.koffein.shoppingreminder.models.Item
-import dev.koffein.shoppingreminder.viewmodels.MainActivityViewModel
+import page.caffeine.shoppingreminder.BuildConfig
+import page.caffeine.shoppingreminder.R
+import page.caffeine.shoppingreminder.databinding.DialogEdititemBinding
+import page.caffeine.shoppingreminder.models.Item
+import page.caffeine.shoppingreminder.viewmodels.MainActivityViewModel
 
 class ItemEditDialog : BottomSheetDialogFragment() {
     private lateinit var binding: DialogEdititemBinding
@@ -41,7 +42,7 @@ class ItemEditDialog : BottomSheetDialogFragment() {
         }
 
         if (!Places.isInitialized()) {
-            Places.initialize(requireContext(), getString(R.string.google_maps_key))
+            Places.initialize(requireContext(), BuildConfig.MAPS_API_KEY)
         }
     }
 

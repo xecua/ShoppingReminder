@@ -1,4 +1,4 @@
-package dev.koffein.shoppingreminder.utils
+package page.caffeine.shoppingreminder.utils
 
 import android.app.Notification
 import android.content.Context
@@ -6,11 +6,11 @@ import android.util.Log
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import dev.koffein.shoppingreminder.R
+import page.caffeine.shoppingreminder.R
 
 object ReminderNotificationManager {
     const val TAG = "NotificationManager"
-    private const val CHANNEL_ID = "dev.koffein.shoppingreminder.notification.reminder"
+    private const val CHANNEL_ID = "page.caffeine.shoppingreminder.notification.reminder"
 
     fun createChannel(context: Context) {
         val channel = NotificationChannelCompat.Builder(

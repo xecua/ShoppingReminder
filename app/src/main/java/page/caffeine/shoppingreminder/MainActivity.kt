@@ -1,4 +1,4 @@
-package dev.koffein.shoppingreminder
+package page.caffeine.shoppingreminder
 
 import android.Manifest
 import android.app.PendingIntent
@@ -28,11 +28,11 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import dev.koffein.shoppingreminder.databinding.ActivityMainBinding
-import dev.koffein.shoppingreminder.databinding.ItemListRowBinding
-import dev.koffein.shoppingreminder.fragments.ItemEditDialog
-import dev.koffein.shoppingreminder.models.Item
-import dev.koffein.shoppingreminder.viewmodels.MainActivityViewModel
+import page.caffeine.shoppingreminder.databinding.ActivityMainBinding
+import page.caffeine.shoppingreminder.databinding.ItemListRowBinding
+import page.caffeine.shoppingreminder.fragments.ItemEditDialog
+import page.caffeine.shoppingreminder.models.Item
+import page.caffeine.shoppingreminder.viewmodels.MainActivityViewModel
 import net.matsudamper.viewbindingutil.bindViewBinding
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {

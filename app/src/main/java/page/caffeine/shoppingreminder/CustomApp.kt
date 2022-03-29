@@ -1,8 +1,8 @@
-package dev.koffein.shoppingreminder
+package page.caffeine.shoppingreminder
 
 import android.app.Application
 import com.google.firebase.FirebaseApp
-import dev.koffein.shoppingreminder.utils.ReminderNotificationManager
+import page.caffeine.shoppingreminder.utils.ReminderNotificationManager
 
 class CustomApp : Application() {
     override fun onCreate() {

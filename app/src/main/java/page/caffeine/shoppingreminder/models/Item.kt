@@ -1,4 +1,4 @@
-package dev.koffein.shoppingreminder.models
+package page.caffeine.shoppingreminder.models
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

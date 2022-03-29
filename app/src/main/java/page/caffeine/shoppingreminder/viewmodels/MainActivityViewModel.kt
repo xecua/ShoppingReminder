@@ -1,13 +1,13 @@
-package dev.koffein.shoppingreminder.viewmodels
+package page.caffeine.shoppingreminder.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.koffein.shoppingreminder.models.Item
-import dev.koffein.shoppingreminder.repositories.FirestoreRepository
-import dev.koffein.shoppingreminder.repositories.ItemRepository
+import page.caffeine.shoppingreminder.models.Item
+import page.caffeine.shoppingreminder.repositories.FirestoreRepository
+import page.caffeine.shoppingreminder.repositories.ItemRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

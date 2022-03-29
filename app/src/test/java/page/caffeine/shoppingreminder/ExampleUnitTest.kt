@@ -1,4 +1,4 @@
-package dev.koffein.shoppingreminder
+package page.caffeine.shoppingreminder
 
 import org.junit.Test
 

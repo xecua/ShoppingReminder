@@ -1,4 +1,4 @@
-package dev.koffein.shoppingreminder
+package page.caffeine.shoppingreminder
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -7,7 +7,7 @@ import android.util.Log
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofenceStatusCodes
 import com.google.android.gms.location.GeofencingEvent
-import dev.koffein.shoppingreminder.utils.ReminderNotificationManager
+import page.caffeine.shoppingreminder.utils.ReminderNotificationManager
 
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
     init {

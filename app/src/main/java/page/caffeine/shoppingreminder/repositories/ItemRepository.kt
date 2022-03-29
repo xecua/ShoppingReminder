@@ -1,4 +1,4 @@
-package dev.koffein.shoppingreminder.repositories
+package page.caffeine.shoppingreminder.repositories
 
 import android.os.Build
 import android.util.Log
@@ -7,8 +7,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.ktx.Firebase
-import dev.koffein.shoppingreminder.BuildConfig
-import dev.koffein.shoppingreminder.models.Item
+import page.caffeine.shoppingreminder.BuildConfig
+import page.caffeine.shoppingreminder.models.Item
 import kotlinx.coroutines.tasks.await
 import java.util.*
 
