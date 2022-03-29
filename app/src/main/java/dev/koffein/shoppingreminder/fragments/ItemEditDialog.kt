@@ -41,7 +41,7 @@ class ItemEditDialog : BottomSheetDialogFragment() {
         }
 
         if (!Places.isInitialized()) {
-            Places.initialize(requireContext(), resources.getString(R.string.google_maps_key))
+            Places.initialize(requireContext(), getString(R.string.google_maps_key))
         }
     }
 

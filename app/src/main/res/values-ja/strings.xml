@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="item_name">項目名</string>
+    <string name="item_desc">説明</string>
+    <string name="save_inputs">保存</string>
+    <string name="place_to_buy_this_item">場所</string>
+    <string name="add_new_item">追加</string>
+    <string name="delete">削除</string>
+    <string name="open_source_license">オープンソースライセンス</string>
+    <string name="configuration">設定</string>
+    <string name="reminder_notification_channel_description">目的地に到着した時に送信される通知</string>
+    <string name="please_login_to_use_this_app">このアプリの利用にはログインが必要です。</string>
+    <string name="location_needed_to_use_reminder">リマインダ機能を利用するためには、位置情報を有効にする必要があります。</string>
+    <string name="sign_in">ログイン</string>
+    <string name="sign_out">ログアウト</string>
+</resources>

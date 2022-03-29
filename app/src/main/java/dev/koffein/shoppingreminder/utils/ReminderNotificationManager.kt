@@ -18,7 +18,7 @@ object ReminderNotificationManager {
             NotificationManagerCompat.IMPORTANCE_DEFAULT
         )
             .setName("Reminder")
-            .setDescription("目的地に到達したときの通知")
+            .setDescription(context.getString(R.string.reminder_notification_channel_description))
             .build()
 
         NotificationManagerCompat.from(context).createNotificationChannel(channel)

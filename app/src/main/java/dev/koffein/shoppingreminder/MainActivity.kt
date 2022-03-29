@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 // user did not sign in
                 Snackbar.make(
                     binding.root,
-                    "このアプリを利用するにはサインインしてください",
+                    getString(R.string.please_login_to_use_this_app),
                     Snackbar.LENGTH_SHORT
                 ).show()
             }
@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                                 if (!isGranted) {
                                     Snackbar.make(
                                         binding.root,
-                                        "リマインダ機能を利用するためには、位置情報を有効にする必要があります",
+                                        getString(R.string.location_needed_to_use_reminder),
                                         Snackbar.LENGTH_SHORT
                                     ).show()
                                 }
@@ -169,7 +169,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 if (!isGranted) {
                     Snackbar.make(
                         binding.root,
-                        "リマインダ機能を利用するためには、位置情報を有効にする必要があります",
+                        getString(R.string.location_needed_to_use_reminder),
                         Snackbar.LENGTH_SHORT
                     ).show()
                 }
@@ -185,9 +185,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         val accountMenuItem = menu?.findItem(R.id.menu_account)
         if (Firebase.auth.currentUser == null) {
-            accountMenuItem?.title = "Sign In"
+            accountMenuItem?.title = getString(R.string.sign_in)
         } else {
-            accountMenuItem?.title = "Sign Out"
+            accountMenuItem?.title = getString(R.string.sign_out)
         }
         return super.onPrepareOptionsMenu(menu)
     }
@@ -199,7 +199,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 true
             }
             R.id.menu_account -> {
-                if (item.title.equals("Sign In")) {
+                if (item.title.equals(getString(R.string.sign_in))) {
                     signInLauncher.launch(createSignInIntent())
                     true
                 } else {
