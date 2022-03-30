@@ -1,6 +1,7 @@
 package page.caffeine.shoppingreminder
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -15,6 +16,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.app.ActivityCompat
@@ -64,6 +66,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
         })
 
+    @RequiresApi(Build.VERSION_CODES.M)
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -157,7 +161,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                         this@MainActivity,
                         newItem.id.hashCode(),
                         intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT
+                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                     )
                     geofenceClient.addGeofences(request, pendingIntent)?.run {
                         addOnSuccessListener { Log.d(TAG, "Successfully add geofence $request") }
