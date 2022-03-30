@@ -87,8 +87,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
         geofenceClient = LocationServices.getGeofencingClient(this)
 
-        signInLauncher.launch(createSignInIntent())
-
         adapter = ItemListAdapter({ index ->
             View.OnClickListener {
                 ItemEditDialog.newInstance(index)
