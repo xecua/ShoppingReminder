@@ -7,15 +7,21 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.app.ActivityCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
@@ -28,18 +34,19 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import net.matsudamper.viewbindingutil.bindViewBinding
 import page.caffeine.shoppingreminder.databinding.ActivityMainBinding
 import page.caffeine.shoppingreminder.databinding.ItemListRowBinding
 import page.caffeine.shoppingreminder.fragments.ItemEditDialog
 import page.caffeine.shoppingreminder.models.Item
 import page.caffeine.shoppingreminder.viewmodels.MainActivityViewModel
-import net.matsudamper.viewbindingutil.bindViewBinding
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val binding by bindViewBinding<ActivityMainBinding>()
 
     private val viewModel by viewModels<MainActivityViewModel>()
 
+    private lateinit var adapter: ItemListAdapter
     private lateinit var geofenceClient: GeofencingClient
 
     private val signInLauncher =
@@ -64,34 +71,37 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
         signInLauncher.launch(createSignInIntent())
 
-        viewModel.items.observe(this, {
-            val adapter = ItemListAdapter(it)
-            adapter.setOnClickListener { index ->
-                View.OnClickListener {
-                    ItemEditDialog.newInstance(index)
-                        .show(supportFragmentManager, ItemEditDialog::class.simpleName)
-                }
+        adapter = ItemListAdapter({ index ->
+            View.OnClickListener {
+                ItemEditDialog.newInstance(index)
+                    .show(supportFragmentManager, ItemEditDialog::class.simpleName)
             }
-
-            val layoutManager = LinearLayoutManager(this)
-            val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
-            binding.itemList.addItemDecoration(itemDecoration)
-            binding.itemList.layoutManager = layoutManager
-            binding.itemList.adapter = adapter
-            adapter.notifyDataSetChanged()
+        })
+        viewModel.items.observe(this, {
+            adapter.submitList(it)
         })
 
-        binding.addNewItem.setOnClickListener {
-            ItemEditDialog.newInstance()
-                .show(supportFragmentManager, ItemEditDialog::class.simpleName)
+        val layoutManager = LinearLayoutManager(this)
+        val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
+        binding.apply {
+            itemList.addItemDecoration(itemDecoration)
+            itemList.layoutManager = layoutManager
+            itemList.adapter = adapter
+
+            addNewItem.setOnClickListener({
+                ItemEditDialog.newInstance()
+                    .show(supportFragmentManager, ItemEditDialog::class.simpleName)
+            })
         }
 
+
         supportFragmentManager.apply {
-            setFragmentResultListener(ItemEditDialog.DELETE_KEY, this@MainActivity) { _, bundle ->
+            setFragmentResultListener(ItemEditDialog.DELETE_KEY, this@MainActivity, { _, bundle ->
                 val id = bundle.getString("id")!!
                 viewModel.delItem(id)
                 geofenceClient.removeGeofences(listOf(id))
-            }
+            })
+
             setFragmentResultListener(
                 ItemEditDialog.RESULT_KEY,
                 this@MainActivity
@@ -226,9 +236,18 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     }
 }
 
-class ItemListAdapter(private val items: List<Item>) :
-    RecyclerView.Adapter<ItemListAdapter.ItemListViewHolder>() {
-    private lateinit var listener: (Int) -> View.OnClickListener
+private val diffCallback = object : DiffUtil.ItemCallback<Item>() {
+    override fun areItemsTheSame(oldItem: Item, newItem: Item): Boolean {
+        return oldItem.id == newItem.id
+    }
+
+    override fun areContentsTheSame(oldItem: Item, newItem: Item): Boolean {
+        return oldItem == newItem
+    }
+}
+
+class ItemListAdapter(private var listener: (Int) -> View.OnClickListener) :
+    ListAdapter<Item, ItemListAdapter.ItemListViewHolder>(diffCallback) {
 
     fun setOnClickListener(listener: (Int) -> View.OnClickListener) {
         this.listener = listener
@@ -246,16 +265,11 @@ class ItemListAdapter(private val items: List<Item>) :
         return ItemListViewHolder(view)
     }
 
-    // update
     override fun onBindViewHolder(holder: ItemListViewHolder, position: Int) {
-        items.getOrNull(position)?.let {
+        getItem(position).let {
             holder.nameView.text = it.name
             holder.descView.text = it.description
+            holder.editView.setOnClickListener(listener(position))
         }
-        holder.editView.setOnClickListener(listener(position))
-    }
-
-    override fun getItemCount(): Int {
-        return items.size
     }
 }
