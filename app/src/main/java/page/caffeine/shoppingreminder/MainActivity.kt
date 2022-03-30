@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         registerForActivityResult(FirebaseAuthUIActivityResultContract(), { res ->
             if (res.resultCode == RESULT_OK) {
                 binding.addNewItem.visibility = View.VISIBLE
+                viewModel.updateItems()
             } else {
                 Log.d(TAG, res.idpResponse.toString())
                 // user did not sign in
@@ -217,13 +218,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             R.id.menu_account -> {
                 if (item.title.equals(getString(R.string.sign_in))) {
                     signInLauncher.launch(createSignInIntent())
-                    true
                 } else {
                     AuthUI.getInstance().signOut(this).addOnSuccessListener {
                         binding.addNewItem.visibility = View.GONE
+                        viewModel.updateItems()
                     }
-                    true
                 }
+                true
             }
             else -> super.onOptionsItemSelected(item)
         }

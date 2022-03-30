@@ -22,14 +22,14 @@ class MainActivityViewModel @Inject constructor(
     val items: LiveData<List<Item>> = _items
 
     init {
-        viewModelScope.launch(Dispatchers.IO) { updateItems() }
+        viewModelScope.launch(Dispatchers.IO) { _updateItems() }
     }
 
     fun addItem(item: Item) {
         Log.d(TAG, "add item $item")
         viewModelScope.launch(Dispatchers.IO) {
             itemRepository.addItem(item)
-            updateItems()
+            _updateItems()
         }
     }
 
@@ -38,24 +38,34 @@ class MainActivityViewModel @Inject constructor(
         // repositoryのsubscribeをしたい(整合性のため)
         viewModelScope.launch(Dispatchers.IO) {
             itemRepository.setItem(id, item)
-            updateItems()
+            _updateItems()
         }
     }
 
     fun delItem(id: String) {
         viewModelScope.launch(Dispatchers.IO) {
             itemRepository.delItem(id)
-            updateItems()
+            _updateItems()
+        }
+    }
+
+    fun updateItems() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _updateItems()
         }
     }
 
     // 自動的に毎回呼べると良い?
-    private suspend fun updateItems() {
+    private suspend fun _updateItems() {
         // 効率悪そう……
         // val newItems = itemRepository.getItems().sortedBy { i -> i.name }
         val newItems = itemRepository.getItems()
         _items.postValue(newItems)
 
+    }
+
+    fun clearItem() {
+        _items.postValue(listOf())
     }
 
     companion object {
