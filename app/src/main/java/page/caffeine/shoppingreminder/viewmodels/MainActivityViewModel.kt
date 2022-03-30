@@ -5,21 +5,21 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import page.caffeine.shoppingreminder.models.Item
-import page.caffeine.shoppingreminder.repositories.FirestoreRepository
-import page.caffeine.shoppingreminder.repositories.ItemRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import page.caffeine.shoppingreminder.models.Item
+import page.caffeine.shoppingreminder.repositories.ItemRepository
+import javax.inject.Inject
 
-class MainActivityViewModel : ViewModel() {
+@HiltViewModel
+class MainActivityViewModel @Inject constructor(
+    private val itemRepository: ItemRepository
+) : ViewModel() {
     private val _items: MutableLiveData<List<Item>> by lazy {
         MutableLiveData()
     }
     val items: LiveData<List<Item>> = _items
-
-    // Hilt使うべき?
-    // private val itemRepository: ItemRepository = MockRepository()
-    private val itemRepository: ItemRepository = FirestoreRepository()
 
     init {
         viewModelScope.launch(Dispatchers.IO) { updateItems() }

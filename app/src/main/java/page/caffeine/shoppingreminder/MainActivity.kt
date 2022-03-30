@@ -36,6 +36,7 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import dagger.hilt.android.AndroidEntryPoint
 import net.matsudamper.viewbindingutil.bindViewBinding
 import page.caffeine.shoppingreminder.databinding.ActivityMainBinding
 import page.caffeine.shoppingreminder.databinding.ItemListRowBinding
@@ -43,6 +44,7 @@ import page.caffeine.shoppingreminder.fragments.ItemEditDialog
 import page.caffeine.shoppingreminder.models.Item
 import page.caffeine.shoppingreminder.viewmodels.MainActivityViewModel
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val binding by bindViewBinding<ActivityMainBinding>()
 
