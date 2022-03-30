@@ -11,6 +11,7 @@ import androidx.fragment.app.setFragmentResult
 import com.google.android.gms.common.api.Status
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -35,14 +36,14 @@ class ItemEditDialog : BottomSheetDialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!Places.isInitialized()) {
+            Places.initialize(requireContext(), BuildConfig.MAPS_API_KEY)
+        }
+
         // むしろitemを取得する?
         val index = arguments?.getInt(ARGS_INDEX, -1)
         if (index != null && index != -1) {
             item = viewModel.items.value?.get(index)
-        }
-
-        if (!Places.isInitialized()) {
-            Places.initialize(requireContext(), BuildConfig.MAPS_API_KEY)
         }
     }
 
@@ -59,6 +60,16 @@ class ItemEditDialog : BottomSheetDialogFragment() {
             // edit
             binding.editItemName.setText(it.name)
             binding.editItemDesc.setText(it.description)
+
+            if (it.placeId != "") {
+                Places.createClient(requireContext()).fetchPlace(
+                    FetchPlaceRequest.newInstance(it.placeId, PLACE_FIELDS)
+                ).addOnSuccessListener({ response ->
+                    currentPlace = response.place
+                }).addOnFailureListener({ e ->
+                    Log.e(TAG, "error occurred: $e")
+                })
+            }
         }
 
         Log.d(TAG, "${parentFragmentManager.fragments}")
@@ -66,7 +77,7 @@ class ItemEditDialog : BottomSheetDialogFragment() {
         (parentFragmentManager.findFragmentById(R.id.edit_item_place) as? AutocompleteSupportFragment)
             ?.apply {
                 setText(item?.place)
-                setPlaceFields(listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG))
+                setPlaceFields(PLACE_FIELDS)
                 setCountry("JP")
                 setOnPlaceSelectedListener(object : PlaceSelectionListener {
                     override fun onPlaceSelected(p0: Place) {
@@ -90,7 +101,6 @@ class ItemEditDialog : BottomSheetDialogFragment() {
         }
 
         binding.editItemSend.setOnClickListener {
-            // placeが設定されてるitemをplaceを新たに設定せずに更新するとcurrentPlaceがnullになる問題(idも持っといてPlace Detailsを叩く?)
             val bundle = bundleOf(
                 "isNew" to (item == null),
                 "name" to binding.editItemName.text.toString(),
@@ -124,6 +134,8 @@ class ItemEditDialog : BottomSheetDialogFragment() {
 
         // 型安全にしたいなあ……
         const val ARGS_INDEX = "index"
+
+        val PLACE_FIELDS = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG)
 
         fun newInstance() = ItemEditDialog()
 

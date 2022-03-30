@@ -46,6 +46,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
             name = snapshot.getString("name") ?: "",
             description = snapshot.getString("description") ?: "",
             place = snapshot.getString("place") ?: "",
+            placeId = snapshot.getString("placeId") ?: "",
             id = snapshot.id
         )
     }
@@ -68,6 +69,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
                 name = it.getString("name") ?: "",
                 description = it.getString("description") ?: "",
                 place = it.getString("place") ?: "",
+                placeId = it.getString("placeId") ?: "",
                 id = it.id
             )
         }
@@ -80,6 +82,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
             "name" to item.name,
             "description" to item.description,
             "place" to item.place,
+            "placeId" to item.placeId,
             "id" to item.id
         )
         getDocumentId()?.let {
@@ -95,6 +98,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
             "name" to item.name,
             "description" to item.description,
             "place" to item.place,
+            "placeId" to item.placeId,
             "id" to item.id
         )
         getDocumentId()?.let {

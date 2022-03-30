@@ -69,6 +69,17 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             }
         })
 
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (!isGranted) {
+                Snackbar.make(
+                    binding.root,
+                    getString(R.string.location_needed_to_use_reminder),
+                    Snackbar.LENGTH_SHORT
+                ).show()
+            }
+        }
+
     @RequiresApi(Build.VERSION_CODES.M)
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,29 +129,9 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 val place = bundle.get("place") as? Place
                 val id = bundle.getString("id")
                 val isNew = bundle.getBoolean("isNew")
-
-                val newItem = Item.ofNullable(name, description, place?.name, id)
+                val newItem = Item.ofNullable(name, description, place?.name, place?.id, id)
 
                 if (place != null) {
-                    // 通知を設定
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        if (ActivityCompat.checkSelfPermission(
-                                this@MainActivity,
-                                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                                if (!isGranted) {
-                                    Snackbar.make(
-                                        binding.root,
-                                        getString(R.string.location_needed_to_use_reminder),
-                                        Snackbar.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                        }
-                    }
-
                     val geofence = Geofence.Builder()
                         .setRequestId(newItem.id)
                         .setCircularRegion(
@@ -173,7 +164,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 }
                 if (isNew) viewModel.addItem(newItem)
                 else viewModel.setItem(newItem.id, newItem)
-                // index持ってるとnotifyItemChangedが飛ばせそう?
             }
         }
 
@@ -182,15 +172,16 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                if (!isGranted) {
-                    Snackbar.make(
-                        binding.root,
-                        getString(R.string.location_needed_to_use_reminder),
-                        Snackbar.LENGTH_SHORT
-                    ).show()
-                }
-            }.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+            ActivityCompat.checkSelfPermission(
+                this@MainActivity,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         }
     }
 
@@ -230,7 +221,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         }
     }
 
-    fun createSignInIntent(): Intent {
+    private fun createSignInIntent(): Intent {
         return AuthUI.getInstance().createSignInIntentBuilder()
             .setAvailableProviders(arrayListOf(AuthUI.IdpConfig.GoogleBuilder().build()))
             .setIsSmartLockEnabled(!BuildConfig.DEBUG, true)

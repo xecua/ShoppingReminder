@@ -8,7 +8,7 @@ import javax.inject.Inject
 class MockRepository @Inject constructor() : ItemRepository {
     private val data = mutableMapOf(*(0..10).map {
         val id = UUID.randomUUID().toString()
-        Pair(id, Item("dummy item$it", "dummy description$it", "", id))
+        Pair(id, Item("dummy item$it", "dummy description$it", "", "", id))
     }.toTypedArray())
 
     override suspend fun getItem(id: String): Item? = data[id]
