@@ -19,6 +19,7 @@ import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatImageButton
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -252,6 +253,7 @@ class ItemListAdapter(private var listener: (Int) -> View.OnClickListener) :
     class ItemListViewHolder(binding: ItemListRowBinding) : RecyclerView.ViewHolder(binding.root) {
         val nameView: TextView = binding.itemListRowName
         val descView: TextView = binding.itemListRowDesc
+        val placeIconView: AppCompatImageView = binding.itemListRowLocationIcon
         val placeView: TextView = binding.itemListRowPlace
         val editView: AppCompatImageButton = binding.itemListRowEdit
     }
@@ -266,6 +268,7 @@ class ItemListAdapter(private var listener: (Int) -> View.OnClickListener) :
         getItem(position).let {
             holder.nameView.text = it.name
             holder.descView.text = it.description
+            holder.placeIconView.visibility = if (it.place.isEmpty()) View.INVISIBLE else View.VISIBLE
             holder.placeView.text = it.place
             holder.editView.setOnClickListener(listener(position))
         }
