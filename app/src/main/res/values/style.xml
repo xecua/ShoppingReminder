@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="CustomBottomSheetDialog" parent="Theme.MaterialComponents.DayNight.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowSoftInputMode">adjustResize</item>
-        <item name="bottomSheetStyle">@style/Widget.ShoppingReminder.BottomSheet.Modal.Rounded</item>
+        <item name="bottomSheetStyle">@style/Widget.ShoppingReminder.BottomSheet.Modal.Rounded
+        </item>
     </style>
 
     <style name="Widget.ShoppingReminder.BottomSheet.Modal.Rounded" parent="Widget.MaterialComponents.BottomSheet.Modal">
-        <item name="shapeAppearanceOverlay">@style/ThemeOverlay.ShoppingReminder.BottomSheet.Modal.Rounded</item>
+        <item name="shapeAppearanceOverlay">
+            @style/ThemeOverlay.ShoppingReminder.BottomSheet.Modal.Rounded
+        </item>
     </style>
+
     <style name="ThemeOverlay.ShoppingReminder.BottomSheet.Modal.Rounded" parent="Widget.MaterialComponents.BottomSheet.Modal">
         <item name="cornerSizeTopLeft">15dp</item>
         <item name="cornerSizeTopRight">15dp</item>

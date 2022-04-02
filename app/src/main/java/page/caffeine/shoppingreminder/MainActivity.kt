@@ -268,7 +268,8 @@ class ItemListAdapter(private var listener: (Int) -> View.OnClickListener) :
         getItem(position).let {
             holder.nameView.text = it.name
             holder.descView.text = it.description
-            holder.placeIconView.visibility = if (it.place.isEmpty()) View.INVISIBLE else View.VISIBLE
+            holder.placeIconView.visibility =
+                if (it.place.isEmpty()) View.INVISIBLE else View.VISIBLE
             holder.placeView.text = it.place
             holder.editView.setOnClickListener(listener(position))
         }
