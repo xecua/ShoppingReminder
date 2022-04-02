@@ -15,4 +15,5 @@
     <string name="location_needed_to_use_reminder">Location permission needs to be granted to use the reminder function.</string>
     <string name="sign_in">Sign In</string>
     <string name="sign_out">Sign Out</string>
+    <string name="item_deleted">Deleted.</string>
 </resources>

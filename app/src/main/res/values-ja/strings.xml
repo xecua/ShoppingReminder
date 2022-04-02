@@ -13,4 +13,5 @@
     <string name="location_needed_to_use_reminder">リマインダ機能を利用するためには、位置情報を有効にする必要があります。</string>
     <string name="sign_in">ログイン</string>
     <string name="sign_out">ログアウト</string>
+    <string name="item_deleted">削除しました。</string>
 </resources>

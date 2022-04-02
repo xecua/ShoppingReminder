@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Canvas
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -13,16 +14,14 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatImageButton
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -94,6 +93,75 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         viewModel.items.observe(this, {
             adapter.submitList(it)
         })
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+            ItemTouchHelper.LEFT
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                // "Not yet implemented"
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                if (direction == ItemTouchHelper.LEFT) {
+                    viewModel.items.value?.let {
+                        viewModel.delItem(it[viewHolder.adapterPosition].id)
+                        Snackbar.make(binding.root, R.string.item_deleted, Snackbar.LENGTH_SHORT)
+                            .show()
+                    }
+                }
+            }
+
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
+                super.onChildDraw(
+                    c,
+                    recyclerView,
+                    viewHolder,
+                    dX,
+                    dY,
+                    actionState,
+                    isCurrentlyActive
+                )
+                val holder = viewHolder as ItemListAdapter.ItemListViewHolder
+
+                if (dX < 0) {
+                    // swiping to left
+                    // https://beightlyouch.com/blog/programming/recycler-view-swipe-delete/
+                    // stick frame
+                    getDefaultUIUtil().onDraw(
+                        c,
+                        recyclerView,
+                        viewHolder.rowLayout,
+                        0f,
+                        0f,
+                        actionState,
+                        isCurrentlyActive
+                    )
+                    // and move foreground view
+                    getDefaultUIUtil().onDraw(
+                        c,
+                        recyclerView,
+                        viewHolder.fgLayout,
+                        dX,
+                        dY,
+                        actionState,
+                        isCurrentlyActive
+                    )
+                }
+            }
+        }).attachToRecyclerView(binding.itemList)
 
         val layoutManager = LinearLayoutManager(this)
         val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
@@ -233,6 +301,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     }
 }
 
+
 private val diffCallback = object : DiffUtil.ItemCallback<Item>() {
     override fun areItemsTheSame(oldItem: Item, newItem: Item): Boolean {
         return oldItem.id == newItem.id
@@ -251,11 +320,14 @@ class ItemListAdapter(private var listener: (Int) -> View.OnClickListener) :
     }
 
     class ItemListViewHolder(binding: ItemListRowBinding) : RecyclerView.ViewHolder(binding.root) {
-        val nameView: TextView = binding.itemListRowName
-        val descView: TextView = binding.itemListRowDesc
-        val placeIconView: AppCompatImageView = binding.itemListRowLocationIcon
-        val placeView: TextView = binding.itemListRowPlace
-        val editView: AppCompatImageButton = binding.itemListRowEdit
+        lateinit var id: String
+        val rowLayout = binding.itemListRowFrame
+        val fgLayout = binding.itemListRowFg
+        val nameView = binding.itemListRowName
+        val descView = binding.itemListRowDesc
+        val placeIconView = binding.itemListRowLocationIcon
+        val placeView = binding.itemListRowPlace
+        val editView = binding.itemListRowEdit
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemListViewHolder {
@@ -266,6 +338,7 @@ class ItemListAdapter(private var listener: (Int) -> View.OnClickListener) :
 
     override fun onBindViewHolder(holder: ItemListViewHolder, position: Int) {
         getItem(position).let {
+            holder.id = it.id
             holder.nameView.text = it.name
             holder.descView.text = it.description
             holder.placeIconView.visibility =
