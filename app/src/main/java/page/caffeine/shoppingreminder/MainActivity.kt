@@ -56,10 +56,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private val signInLauncher =
         registerForActivityResult(FirebaseAuthUIActivityResultContract(), { res ->
-            if (res.resultCode == RESULT_OK) {
-                binding.addNewItem.visibility = View.VISIBLE
-                viewModel.updateItems()
-            } else {
+            if (res.resultCode != RESULT_OK) {
                 Log.d(TAG, res.idpResponse.toString())
                 // user did not sign in
                 Snackbar.make(
@@ -182,6 +179,12 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         ) {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         }
+
+        Firebase.auth.addAuthStateListener { auth ->
+            binding.addNewItem.visibility =
+                if (auth.currentUser == null) View.GONE else View.VISIBLE
+            viewModel.updateItems()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -209,10 +212,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 if (item.title.equals(getString(R.string.sign_in))) {
                     signInLauncher.launch(createSignInIntent())
                 } else {
-                    AuthUI.getInstance().signOut(this).addOnSuccessListener {
-                        binding.addNewItem.visibility = View.GONE
-                        viewModel.updateItems()
-                    }
+                    AuthUI.getInstance().signOut(this)
                 }
                 true
             }
