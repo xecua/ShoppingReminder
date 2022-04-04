@@ -14,4 +14,5 @@
     <string name="sign_in">ログイン</string>
     <string name="sign_out">ログアウト</string>
     <string name="item_deleted">削除しました。</string>
+    <string name="undo_delete">取り消す</string>
 </resources>

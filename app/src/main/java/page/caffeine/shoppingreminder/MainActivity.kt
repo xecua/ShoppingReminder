@@ -93,6 +93,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         viewModel.items.observe(this, {
             adapter.submitList(it)
         })
+
         ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN,
             ItemTouchHelper.LEFT
@@ -109,8 +110,18 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 if (direction == ItemTouchHelper.LEFT) {
                     viewModel.items.value?.let {
-                        viewModel.delItem(it[viewHolder.adapterPosition].id)
                         Snackbar.make(binding.root, R.string.item_deleted, Snackbar.LENGTH_SHORT)
+                            .addCallback(object : Snackbar.Callback() {
+                                override fun onDismissed(
+                                    transientBottomBar: Snackbar?,
+                                    event: Int
+                                ) {
+                                    super.onDismissed(transientBottomBar, event)
+                                    if (event != DISMISS_EVENT_ACTION) {
+                                        viewModel.delItem(it[viewHolder.adapterPosition].id)
+                                    }
+                                }
+                            })
                             .show()
                     }
                 }
