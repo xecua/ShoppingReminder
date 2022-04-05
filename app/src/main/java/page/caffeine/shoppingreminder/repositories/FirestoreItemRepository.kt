@@ -32,7 +32,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         Log.d(TAG, "getItem: $id")
         val snapshot = try {
             getDocumentId()?.let {
-                firestore.collection(ROOT_COLLECTION_ID).document(it).collection(COLLECTION_ID)
+                firestore.collection(ROOT_COLLECTION_ID).document(it).collection(ITEM_COLLECTION_ID)
                     .document(id).get().await()
             }
         } catch (e: FirebaseFirestoreException) {
@@ -55,7 +55,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         Log.d(TAG, "getItems")
         val snapshot = try {
             getDocumentId()?.let {
-                firestore.collection(ROOT_COLLECTION_ID).document(it).collection(COLLECTION_ID)
+                firestore.collection(ROOT_COLLECTION_ID).document(it).collection(ITEM_COLLECTION_ID)
                     .get().await()
             }
         } catch (e: FirebaseFirestoreException) {
@@ -87,7 +87,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         )
         getDocumentId()?.let {
             firestore.collection(ROOT_COLLECTION_ID).document(it).collection(
-                COLLECTION_ID
+                ITEM_COLLECTION_ID
             ).document(item.id).update(data)
         }
     }
@@ -103,22 +103,22 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         )
         getDocumentId()?.let {
             firestore.collection(ROOT_COLLECTION_ID).document(it).collection(
-                COLLECTION_ID
             ).document(item.id).set(data)
+                ITEM_COLLECTION_ID
         }
     }
 
     override suspend fun delItem(id: String) {
         Log.d(TAG, "delItem")
         getDocumentId()?.let {
-            firestore.collection(ROOT_COLLECTION_ID).document(it).collection(COLLECTION_ID)
+            firestore.collection(ROOT_COLLECTION_ID).document(it).collection(ITEM_COLLECTION_ID)
                 .document(id).delete()
         }
     }
 
     companion object {
         const val TAG = "FirestoreRepository"
-        const val ROOT_COLLECTION_ID = "items"
-        const val COLLECTION_ID = "items"
+        const val ROOT_COLLECTION_ID = "users"
+        const val ITEM_COLLECTION_ID = "items"
     }
 }
