@@ -6,6 +6,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 import page.caffeine.shoppingreminder.BuildConfig
@@ -30,26 +31,17 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
 
     override suspend fun getItem(id: String): Item? {
         Log.d(TAG, "getItem: $id")
-        val snapshot = try {
+        return try {
             getDocumentId()?.let {
                 firestore.collection(ROOT_COLLECTION_ID).document(it).collection(ITEM_COLLECTION_ID)
-                    .document(id).get().await()
+                    .document(id).get().await().toObject<Item>()
             }
         } catch (e: FirebaseFirestoreException) {
             Log.e(TAG, "Failed to get item $id", e)
             return null
-        } ?: return null
-
-        Log.d(TAG, "$snapshot.data")
-
-        return Item(
-            name = snapshot.getString("name") ?: "",
-            description = snapshot.getString("description") ?: "",
-            place = snapshot.getString("place") ?: "",
-            placeId = snapshot.getString("placeId") ?: "",
-            id = snapshot.id
-        )
+        }
     }
+
 
     override suspend fun getItems(): List<Item> {
         Log.d(TAG, "getItems")
@@ -63,16 +55,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
             return listOf()
         } ?: return listOf()
 
-        return snapshot.documents.map {
-            Log.d(TAG, "$it")
-            Item(
-                name = it.getString("name") ?: "",
-                description = it.getString("description") ?: "",
-                place = it.getString("place") ?: "",
-                placeId = it.getString("placeId") ?: "",
-                id = it.id
-            )
-        }
+        return snapshot.documents.mapNotNull { it.toObject<Item>() }
     }
 
     override suspend fun setItem(id: String, item: Item) {
@@ -94,17 +77,10 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
 
     override suspend fun addItem(item: Item) {
         Log.d(TAG, "addItem")
-        val data = hashMapOf<String, Any>(
-            "name" to item.name,
-            "description" to item.description,
-            "place" to item.place,
-            "placeId" to item.placeId,
-            "id" to item.id
-        )
         getDocumentId()?.let {
             firestore.collection(ROOT_COLLECTION_ID).document(it).collection(
-            ).document(item.id).set(data)
                 ITEM_COLLECTION_ID
+            ).document(item.id).set(item)
         }
     }
 
