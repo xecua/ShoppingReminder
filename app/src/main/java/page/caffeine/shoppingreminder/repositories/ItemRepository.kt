@@ -4,12 +4,18 @@ import page.caffeine.shoppingreminder.models.Item
 
 interface ItemRepository {
     suspend fun getItem(id: String): Item?
-    suspend fun getItems(): List<Item> // 順序を保証しない(使う側でソートすることを期待)
+    suspend fun getItem(index: Int): Item?
+    suspend fun getItems(): List<Item> // sorted
 
-    // わける必要があるかは怪しい(itemがidを内包しているため)
-    suspend fun setItem(id: String, item: Item)
     suspend fun addItem(item: Item)
-
+    suspend fun insertItem(index: Int, item: Item)
+    suspend fun setItem(id: String, item: Item)
+    suspend fun setItem(index: Int, item: Item)
     suspend fun delItem(id: String)
+    suspend fun delItem(index: Int)
+
+    // ordering
+    suspend fun swapItem(leftIndex: Int, rightIndex: Int)
+    suspend fun swapItem(leftId: String, rightId: String)
 }
 

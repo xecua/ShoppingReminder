@@ -103,27 +103,34 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
             ): Boolean {
-                // "Not yet implemented"
-                return false
+                val from = viewHolder.adapterPosition
+                val to = target.adapterPosition
+                viewModel.swapItem(from, to)
+                return true
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 if (direction == ItemTouchHelper.LEFT) {
-                    viewModel.items.value?.let {
-                        Snackbar.make(binding.root, R.string.item_deleted, Snackbar.LENGTH_SHORT)
-                            .addCallback(object : Snackbar.Callback() {
-                                override fun onDismissed(
-                                    transientBottomBar: Snackbar?,
-                                    event: Int
-                                ) {
-                                    super.onDismissed(transientBottomBar, event)
-                                    if (event != DISMISS_EVENT_ACTION) {
-                                        viewModel.delItem(it[viewHolder.adapterPosition].id)
-                                    }
+                    val index = viewHolder.adapterPosition
+                    val item = viewModel.items.value?.get(index) ?: return
+                    viewModel.delItem(item.id)
+
+                    Snackbar.make(binding.root, R.string.item_deleted, Snackbar.LENGTH_SHORT)
+                        .setAction(R.string.undo_delete, {
+                            viewModel.insertItem(index, item)
+                        })
+                        .addCallback(object : Snackbar.Callback() {
+                            override fun onDismissed(
+                                transientBottomBar: Snackbar?,
+                                event: Int
+                            ) {
+                                super.onDismissed(transientBottomBar, event)
+                                if (event != DISMISS_EVENT_ACTION) {
+                                    geofenceClient.removeGeofences(listOf(item.id))
                                 }
-                            })
-                            .show()
-                    }
+                            }
+                        })
+                        .show()
                 }
             }
 
@@ -147,16 +154,26 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 )
                 val holder = viewHolder as ItemListAdapter.ItemListViewHolder
 
-                if (dX < 0) {
+                if (dX == 0f) {
+                    getDefaultUIUtil().onDraw(
+                        c,
+                        recyclerView,
+                        holder.rowLayout,
+                        dX,
+                        dY,
+                        actionState,
+                        isCurrentlyActive
+                    )
+                } else if (dX < 0) {
                     // swiping to left
                     // https://beightlyouch.com/blog/programming/recycler-view-swipe-delete/
                     // stick frame
                     getDefaultUIUtil().onDraw(
                         c,
                         recyclerView,
-                        viewHolder.rowLayout,
+                        holder.rowLayout,
                         0f,
-                        0f,
+                        dY,
                         actionState,
                         isCurrentlyActive
                     )
@@ -164,13 +181,23 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                     getDefaultUIUtil().onDraw(
                         c,
                         recyclerView,
-                        viewHolder.fgLayout,
+                        holder.fgLayout,
                         dX,
                         dY,
                         actionState,
                         isCurrentlyActive
                     )
                 }
+            }
+
+            override fun clearView(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder
+            ) {
+                super.clearView(recyclerView, viewHolder)
+                val holder = viewHolder as ItemListAdapter.ItemListViewHolder
+                getDefaultUIUtil().clearView(holder.rowLayout)
+                getDefaultUIUtil().clearView(holder.fgLayout)
             }
         }).attachToRecyclerView(binding.itemList)
 
@@ -259,6 +286,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         }
 
+        if (Firebase.auth.currentUser == null) {
+            Snackbar.make(
+                binding.root,
+                R.string.please_login_to_use_this_app,
+                Snackbar.LENGTH_SHORT
+            ).show()
+        }
         Firebase.auth.addAuthStateListener { auth ->
             binding.addNewItem.visibility =
                 if (auth.currentUser == null) View.GONE else View.VISIBLE

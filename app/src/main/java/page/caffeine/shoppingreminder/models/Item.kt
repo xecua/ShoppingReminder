@@ -6,11 +6,11 @@ import java.util.UUID
 
 @Parcelize
 data class Item(
-    val name: String,
-    val description: String,
-    val place: String,
-    val placeId: String,
-    val id: String
+    val name: String = "",
+    val description: String = "",
+    val place: String = "",
+    val placeId: String = "",
+    val id: String = UUID.randomUUID().toString()
 ) : Parcelable {
     companion object {
         fun ofNullable(

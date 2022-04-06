@@ -49,6 +49,20 @@ class MainActivityViewModel @Inject constructor(
         }
     }
 
+    fun insertItem(index: Int, item: Item) {
+        viewModelScope.launch(Dispatchers.IO) {
+            itemRepository.insertItem(index, item)
+            _updateItems()
+        }
+    }
+
+    fun swapItem(leftIndex: Int, rightIndex: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            itemRepository.swapItem(leftIndex, rightIndex)
+            _updateItems()
+        }
+    }
+
     fun updateItems() {
         viewModelScope.launch(Dispatchers.IO) {
             _updateItems()
