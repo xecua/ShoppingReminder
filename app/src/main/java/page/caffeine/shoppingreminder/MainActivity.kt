@@ -103,8 +103,10 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
             ): Boolean {
-                // "Not yet implemented"
-                return false
+                val from = viewHolder.adapterPosition
+                val to = target.adapterPosition
+                viewModel.swapItem(from, to)
+                return true
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
