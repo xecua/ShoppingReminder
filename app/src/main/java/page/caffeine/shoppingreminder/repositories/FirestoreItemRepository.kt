@@ -54,9 +54,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
                 .collection(ITEM_COLLECTION_ID)
         return try {
             firestore.runTransaction { transaction ->
-                val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>() ?: ItemMisc(
-                    itemOrder = mutableListOf()
-                )
+                val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>() ?: ItemMisc()
                 if (index < 0 || itemMisc.itemOrder.size <= index) {
                     throw FirebaseFirestoreException(
                         "Index out of range",
@@ -84,7 +82,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
 
         return try {
             val itemMisc = itemMiscDocId.get().await().toObject<ItemMisc>()
-                ?: ItemMisc(itemOrder = mutableListOf())
+                ?: ItemMisc()
             val items = itemCollectionId.get().await().documents.associate {
                 val item = it.toObject<Item>()!!
                 item.id to item
@@ -121,7 +119,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         try {
             firestore.runTransaction { transaction ->
                 val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
-                    ?: ItemMisc(itemOrder = mutableListOf())
+                    ?: ItemMisc()
                 if (index < 0 || itemMisc.itemOrder.size < index) {
                     throw FirebaseFirestoreException(
                         "Index out of range",
@@ -151,7 +149,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         try {
             firestore.runTransaction { transaction ->
                 val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
-                    ?: ItemMisc(itemOrder = mutableListOf())
+                    ?: ItemMisc()
                 itemMisc.itemOrder.add(item.id)
                 transaction.set(itemDocId, item)
                 transaction.set(itemMiscDocId, itemMisc)
@@ -174,7 +172,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         try {
             firestore.runTransaction { transaction ->
                 val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
-                    ?: ItemMisc(itemOrder = mutableListOf())
+                    ?: ItemMisc()
 
                 if (index < 0 || itemMisc.itemOrder.size < index) {
                     throw FirebaseFirestoreException(
@@ -206,7 +204,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         try {
             firestore.runTransaction { transaction ->
                 val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
-                    ?: ItemMisc(itemOrder = mutableListOf())
+                    ?: ItemMisc()
                 val index = itemMisc.itemOrder.indexOf(id)
                 if (index == -1) {
                     throw FirebaseFirestoreException(
@@ -296,7 +294,7 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         try {
             firestore.runTransaction { transaction ->
                 val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
-                    ?: ItemMisc(itemOrder = mutableListOf())
+                    ?: ItemMisc()
 
                 val ids = itemMisc.itemOrder.filter { it in listOf(leftId, rightId) }
                 if (ids.size != 2) {
@@ -330,5 +328,5 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
 }
 
 data class ItemMisc(
-    val itemOrder: MutableList<String>
+    val itemOrder: MutableList<String> = mutableListOf()
 )
