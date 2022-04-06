@@ -54,13 +54,17 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
                 .collection(ITEM_COLLECTION_ID)
         return try {
             firestore.runTransaction { transaction ->
-                transaction
-                    .get(itemMiscDocId).toObject<ItemMisc>()
-                    ?.itemOrder
-                    ?.get(index)
-                    ?.let { key ->
-                        transaction.get(itemCollectionId.document(key)).toObject<Item>()
-                    }
+                val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>() ?: ItemMisc(
+                    itemOrder = mutableListOf()
+                )
+                if (index < 0 || itemMisc.itemOrder.size <= index) {
+                    throw FirebaseFirestoreException(
+                        "Index out of range",
+                        FirebaseFirestoreException.Code.OUT_OF_RANGE
+                    )
+                }
+                val key = itemMisc.itemOrder[index]
+                transaction.get(itemCollectionId.document(key)).toObject<Item>()
             }.await()
         } catch (e: FirebaseFirestoreException) {
             Log.e(TAG, "Failed to get item at $index", e)
@@ -70,34 +74,35 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
 
     override suspend fun getItems(): List<Item> {
         Log.d(TAG, "getItems")
-        val snapshot = try {
-            getDocumentId()?.let {
-                firestore.collection(ROOT_COLLECTION_ID).document(it).collection(ITEM_COLLECTION_ID)
-                    .get().await()
-            } ?: return listOf()
+
+        val userDocId = getDocumentId() ?: return listOf()
+        val itemMiscDocId = firestore.collection(ROOT_COLLECTION_ID).document(userDocId)
+            .collection(MISC_COLLECTION_ID).document(MISC_ITEM_DOCUMENT_ID)
+        val itemCollectionId =
+            firestore.collection(ROOT_COLLECTION_ID).document(userDocId)
+                .collection(ITEM_COLLECTION_ID)
+
+        return try {
+            val itemMisc = itemMiscDocId.get().await().toObject<ItemMisc>()
+                ?: ItemMisc(itemOrder = mutableListOf())
+            val items = itemCollectionId.get().await().documents.associate {
+                val item = it.toObject<Item>()!!
+                item.id to item
+            }
+            itemMisc.itemOrder.mapNotNull { items[it] }
         } catch (e: FirebaseFirestoreException) {
             Log.e(TAG, "Failed to get items", e)
-            return listOf()
+            listOf()
         }
-
-        return snapshot.documents.mapNotNull { it.toObject<Item>() }
     }
 
     override suspend fun setItem(id: String, item: Item) {
         Log.d(TAG, "setItem: $id -> $item")
-        // assert id == item.id?
-        val data = hashMapOf<String, Any>(
-            "name" to item.name,
-            "description" to item.description,
-            "place" to item.place,
-            "placeId" to item.placeId,
-            "id" to item.id
-        )
         try {
             getDocumentId()?.let {
                 firestore.collection(ROOT_COLLECTION_ID).document(it).collection(
                     ITEM_COLLECTION_ID
-                ).document(item.id).update(data).await()
+                ).document(id).set(item).await()
             }
         } catch (e: FirebaseFirestoreException) {
             Log.e(TAG, "Failed to update $id to $item", e)
@@ -116,33 +121,16 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         try {
             firestore.runTransaction { transaction ->
                 val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
-                if (itemMisc == null) {
-                    if (index != 0) {
-                        throw FirebaseFirestoreException(
-                            "Index out of range",
-                            FirebaseFirestoreException.Code.INVALID_ARGUMENT
-                        )
-                    }
-                    val itemMisc = ItemMisc(
-                        itemOrder = mutableListOf(item.id)
-                    )
-                    transaction.set(itemDocId, item)
-                    transaction.set(itemMiscDocId, itemMisc)
-                } else {
-                    if (index < 0 || itemMisc.itemOrder.size < index) {
-                        throw FirebaseFirestoreException(
-                            "Index out of range",
-                            FirebaseFirestoreException.Code.INVALID_ARGUMENT
-                        )
-                    }
-                    itemMisc.itemOrder[index] = item.id
-                    transaction.set(itemDocId, item)
-                    transaction.update(
-                        itemMiscDocId, mapOf(
-                            "itemOrder" to itemMisc.itemOrder
-                        )
+                    ?: ItemMisc(itemOrder = mutableListOf())
+                if (index < 0 || itemMisc.itemOrder.size < index) {
+                    throw FirebaseFirestoreException(
+                        "Index out of range",
+                        FirebaseFirestoreException.Code.OUT_OF_RANGE
                     )
                 }
+                itemMisc.itemOrder[index] = item.id
+                transaction.set(itemDocId, item)
+                transaction.set(itemMiscDocId, itemMisc)
                 null
             }.await()
         } catch (e: FirebaseFirestoreException) {
@@ -152,10 +140,25 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
 
     override suspend fun addItem(item: Item) {
         Log.d(TAG, "addItem")
-        getDocumentId()?.let {
-            firestore.collection(ROOT_COLLECTION_ID).document(it).collection(
-                ITEM_COLLECTION_ID
-            ).document(item.id).set(item)
+
+        val userDocId = getDocumentId() ?: return
+        val itemMiscDocId = firestore.collection(ROOT_COLLECTION_ID).document(userDocId)
+            .collection(MISC_COLLECTION_ID).document(MISC_ITEM_DOCUMENT_ID)
+        val itemDocId =
+            firestore.collection(ROOT_COLLECTION_ID).document(userDocId)
+                .collection(ITEM_COLLECTION_ID).document(item.id)
+
+        try {
+            firestore.runTransaction { transaction ->
+                val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
+                    ?: ItemMisc(itemOrder = mutableListOf())
+                itemMisc.itemOrder.add(item.id)
+                transaction.set(itemDocId, item)
+                transaction.set(itemMiscDocId, itemMisc)
+                null
+            }.await()
+        } catch (e: FirebaseFirestoreException) {
+            Log.e(TAG, "Failed to add item $item", e)
         }
     }
 
@@ -171,37 +174,18 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         try {
             firestore.runTransaction { transaction ->
                 val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
-                if (itemMisc == null) {
-                    // no item. create
-                    if (index != 0) {
-                        throw FirebaseFirestoreException(
-                            "Index out of range",
-                            FirebaseFirestoreException.Code.INVALID_ARGUMENT
-                        )
-                    }
-                    val itemMisc = ItemMisc(
-                        itemOrder = mutableListOf(item.id)
-                    )
+                    ?: ItemMisc(itemOrder = mutableListOf())
 
-                    transaction.set(itemDocId, item)
-                    transaction.set(itemMiscDocId, itemMisc)
-
-                } else {
-                    if (index < 0 || itemMisc.itemOrder.size < index) {
-                        throw FirebaseFirestoreException(
-                            "Index out of range",
-                            FirebaseFirestoreException.Code.INVALID_ARGUMENT
-                        )
-                    }
-                    itemMisc.itemOrder.add(index, item.id)
-
-                    transaction.set(itemDocId, item)
-                    transaction.update(
-                        itemMiscDocId, mapOf(
-                            "itemOrder" to itemMisc.itemOrder
-                        )
+                if (index < 0 || itemMisc.itemOrder.size < index) {
+                    throw FirebaseFirestoreException(
+                        "Index out of range",
+                        FirebaseFirestoreException.Code.OUT_OF_RANGE
                     )
                 }
+                itemMisc.itemOrder.add(index, item.id)
+
+                transaction.set(itemDocId, item)
+                transaction.set(itemMiscDocId, itemMisc)
                 null
             }.await()
         } catch (e: FirebaseFirestoreException) {
@@ -211,11 +195,31 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
 
     override suspend fun delItem(id: String) {
         Log.d(TAG, "delItem")
+
+        val userDocId = getDocumentId() ?: return
+        val itemMiscDocId = firestore.collection(ROOT_COLLECTION_ID).document(userDocId)
+            .collection(MISC_COLLECTION_ID).document(MISC_ITEM_DOCUMENT_ID)
+        val itemDocId =
+            firestore.collection(ROOT_COLLECTION_ID).document(userDocId)
+                .collection(ITEM_COLLECTION_ID).document(id)
+
         try {
-            getDocumentId()?.let {
-                firestore.collection(ROOT_COLLECTION_ID).document(it).collection(ITEM_COLLECTION_ID)
-                    .document(id).delete().await()
-            }
+            firestore.runTransaction { transaction ->
+                val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
+                    ?: ItemMisc(itemOrder = mutableListOf())
+                val index = itemMisc.itemOrder.indexOf(id)
+                if (index == -1) {
+                    throw FirebaseFirestoreException(
+                        "Item not found",
+                        FirebaseFirestoreException.Code.NOT_FOUND
+                    )
+                }
+                itemMisc.itemOrder.removeAt(index)
+                transaction.set(itemMiscDocId, itemMisc)
+                transaction.delete(itemDocId)
+
+                null
+            }.await()
         } catch (e: FirebaseFirestoreException) {
             Log.e(TAG, "Failed to delete $id", e)
             return
@@ -234,10 +238,10 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         try {
             firestore.runTransaction { transaction ->
                 val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
-                if (itemMisc == null || index < 0 || itemMisc.itemOrder.size < index) {
+                if (itemMisc == null || index < 0 || itemMisc.itemOrder.size <= index) {
                     throw FirebaseFirestoreException(
                         "Index out of range",
-                        FirebaseFirestoreException.Code.INVALID_ARGUMENT
+                        FirebaseFirestoreException.Code.OUT_OF_RANGE
                     )
                 }
 
@@ -262,21 +266,17 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         try {
             firestore.runTransaction { transaction ->
                 val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
-                if (itemMisc == null || leftIndex < 0 || itemMisc.itemOrder.size < leftIndex ||
-                    rightIndex < 0 || itemMisc.itemOrder.size < rightIndex
+                if (itemMisc == null || leftIndex < 0 || itemMisc.itemOrder.size <= leftIndex ||
+                    rightIndex < 0 || itemMisc.itemOrder.size <= rightIndex
                 ) {
                     throw FirebaseFirestoreException(
                         "Index out of range",
-                        FirebaseFirestoreException.Code.INVALID_ARGUMENT
+                        FirebaseFirestoreException.Code.OUT_OF_RANGE
                     )
                 }
 
                 Collections.swap(itemMisc.itemOrder, leftIndex, rightIndex)
-                transaction.update(
-                    itemMiscDocId, mapOf(
-                        "itemMisc" to itemMisc
-                    )
-                )
+                transaction.set(itemMiscDocId, itemMisc)
 
                 null
             }.await()
@@ -296,27 +296,20 @@ class FirestoreItemRepository @Inject constructor() : ItemRepository {
         try {
             firestore.runTransaction { transaction ->
                 val itemMisc = transaction.get(itemMiscDocId).toObject<ItemMisc>()
-                    ?: throw FirebaseFirestoreException(
-                        "Index out of range",
-                        FirebaseFirestoreException.Code.INVALID_ARGUMENT
-                    )
+                    ?: ItemMisc(itemOrder = mutableListOf())
 
                 val ids = itemMisc.itemOrder.filter { it in listOf(leftId, rightId) }
                 if (ids.size != 2) {
                     throw FirebaseFirestoreException(
                         "Index out of range",
-                        FirebaseFirestoreException.Code.INVALID_ARGUMENT
+                        FirebaseFirestoreException.Code.OUT_OF_RANGE
                     )
                 }
                 val leftIndex = ids.indexOf(leftId)
                 val rightIndex = 1 - leftIndex
 
                 Collections.swap(itemMisc.itemOrder, leftIndex, rightIndex)
-                transaction.update(
-                    itemMiscDocId, mapOf(
-                        "itemMisc" to itemMisc
-                    )
-                )
+                transaction.set(itemMiscDocId, itemMisc)
 
                 null
             }.await()

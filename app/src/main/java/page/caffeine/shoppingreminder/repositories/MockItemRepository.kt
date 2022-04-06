@@ -31,6 +31,7 @@ class MockRepository @Inject constructor() : ItemRepository {
 
     override suspend fun addItem(item: Item) {
         Log.d(TAG, "new item $item added")
+        order.add(item.id)
         data[item.id] = item
     }
 
@@ -42,6 +43,7 @@ class MockRepository @Inject constructor() : ItemRepository {
 
     override suspend fun delItem(id: String) {
         Log.d(TAG, "$id will be deleted")
+        order.remove(id)
         data.remove(id)
     }
 
