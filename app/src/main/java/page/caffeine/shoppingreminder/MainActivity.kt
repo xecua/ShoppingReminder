@@ -259,6 +259,13 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         }
 
+        if (Firebase.auth.currentUser == null) {
+            Snackbar.make(
+                binding.root,
+                R.string.please_login_to_use_this_app,
+                Snackbar.LENGTH_SHORT
+            ).show()
+        }
         Firebase.auth.addAuthStateListener { auth ->
             binding.addNewItem.visibility =
                 if (auth.currentUser == null) View.GONE else View.VISIBLE
