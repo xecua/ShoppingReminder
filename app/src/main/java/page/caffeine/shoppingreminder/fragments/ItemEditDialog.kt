@@ -3,8 +3,10 @@ package page.caffeine.shoppingreminder.fragments
 import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import androidx.core.os.bundleOf
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResult
@@ -73,6 +75,15 @@ class ItemEditDialog : BottomSheetDialogFragment() {
         }
 
         Log.d(TAG, "${parentFragmentManager.fragments}")
+
+        binding.editItemName.setOnEditorActionListener { _, actionId, event ->
+            if ((actionId == EditorInfo.IME_ACTION_SEND)// for software keyboard
+                || (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) // for hardware keyboard
+            ) {
+                binding.editItemSend.callOnClick()
+            }
+            return@setOnEditorActionListener true
+        }
 
         (parentFragmentManager.findFragmentById(R.id.edit_item_place) as? AutocompleteSupportFragment)
             ?.apply {
