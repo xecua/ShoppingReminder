@@ -76,6 +76,7 @@ class ItemEditDialog : BottomSheetDialogFragment() {
 
         Log.d(TAG, "${parentFragmentManager.fragments}")
 
+        if (item == null) binding.editItemName.requestFocus()
         binding.editItemName.setOnEditorActionListener { _, actionId, event ->
             if ((actionId == EditorInfo.IME_ACTION_SEND)// for software keyboard
                 || (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) // for hardware keyboard
