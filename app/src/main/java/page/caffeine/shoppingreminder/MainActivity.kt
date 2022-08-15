@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             ): Boolean {
                 val from = viewHolder.adapterPosition
                 val to = target.adapterPosition
-                viewModel.swapItem(from, to)
+                viewModel.moveItem(from, to)
                 return true
             }
 

@@ -78,6 +78,21 @@ class MainActivityViewModel @Inject constructor(
 
     }
 
+    fun moveItem(fromIndex: Int, toIndex: Int) {
+        Log.d(TAG, "$fromIndex to $toIndex")
+        items.value?.let {
+            if ((0 <= fromIndex && fromIndex < it.size) && (0 <= toIndex && toIndex <= it.size)) {
+                // toはもとのリスト上の位置でok
+                // toIndexは末尾挿入を可能にするためにsizeとの一致を許容
+                val newList = it.toMutableList()
+                val moved = newList.removeAt(fromIndex)
+                newList.add(toIndex, moved)
+
+                _items.postValue(newList)
+            }
+        }
+    }
+
     fun clearItem() {
         _items.postValue(listOf())
     }
